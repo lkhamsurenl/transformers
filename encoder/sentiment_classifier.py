@@ -50,28 +50,40 @@ def train_one_epoch(training_loader, optimizer, model, loss_fn):
             print('  batch {} loss: {}'.format(i + 1, last_loss))
             running_loss = 0.
 
-        # TODO: Move it out
+        # TODO: Move it out once confirmed it's working
         return last_loss
+
 
 def main():
     model_name = "bert-base-uncased"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     config = AutoConfig.from_pretrained(model_name)
 
+    params = {
+        "batch_size": 128,
+        "learning_rate": 1e-3,
+        "momentum": 0.9,
+        "num_epochs": 3,
+    }
+
     # load imdb dataset
     imdb = load_dataset("imdb")
+    print(f"Loaded dataset: {imdb}")
 
     # Create data loaders for our datasets; shuffle for imdb["train"], not for validation
-    training_loader = tokenize_dataset_to_dataloader(imdb["train"], tokenizer, shuffle=True)
-    test_loader = tokenize_dataset_to_dataloader(imdb["test"], tokenizer, shuffle=False)
+    training_loader = tokenize_dataset_to_dataloader(imdb["train"], tokenizer, shuffle=True, batch_size=params["batch_size"])
+    test_loader = tokenize_dataset_to_dataloader(imdb["test"], tokenizer, shuffle=False, batch_size=params["batch_size"])
+    print(f"Dataloaders are ready!")
 
     model = AttentionClassifier(config)
     loss_fn = torch.nn.BCELoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-    # train model
-    for _ in range(3):
+    optimizer = torch.optim.SGD(model.parameters(), lr=params["learning_rate"], momentum=params["momentum"])
+    # Training loop
+    for _ in range(params["num_epochs"]):
+        # One epoch
         avg_loss = train_one_epoch(training_loader, optimizer, model, loss_fn)
 
+        # Evaluate on validation dataset
         running_tloss = 0.
         # Disable gradient computation and reduce memory consumption.
         with torch.no_grad():
@@ -81,7 +93,8 @@ def main():
                 test_outputs = model(test_inputs)
                 test_loss = loss_fn(test_outputs, test_labels)
                 running_tloss += test_loss
-
+                print(f"i = {i}; test_loss = {test_loss}; running_tloss = {running_tloss}")
+                break
         avg_tloss = running_tloss / (i + 1)
         print('LOSS train {} valid {}'.format(avg_loss, avg_tloss))
 
