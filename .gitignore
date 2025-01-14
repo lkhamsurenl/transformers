@@ -1,5 +1,7 @@
 .idea/*
 .ipynb_checkpoints/*
 encoder/.idea/*
+gpt/.idea/*
+gpt/__pycache__/
 venv/
 notebooks/.ipynb_checkpoints/
