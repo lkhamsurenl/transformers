@@ -5,3 +5,6 @@ gpt/.idea/*
 gpt/__pycache__/
 venv/
 notebooks/.ipynb_checkpoints/
+notebooks/the-verdict.txt
+notebooks/instruction-data.json
+notebooks/*.pth
